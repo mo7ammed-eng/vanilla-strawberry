@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+api/vendor/
+api/node_modules/
+.pnp
+.pnp.*
+
+# Builds
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment
+.env
+.env.local
+.env.*.local
+api/.env
+api/.env.*.local
+!.env.example
+!api/.env.example
+
+# Local database
+.mysql-data/
+.mysql-data-*/
+*.sqlite
+api/database/database.sqlite
+
+# Logs and runtime
+*.log
+api/storage/logs/*.log
+api/storage/framework/cache/*
+api/storage/framework/sessions/*
+api/storage/framework/views/*
+api/storage/framework/testing/*
+api/storage/framework/cache/data/*
+api/storage/app/private/*
+api/storage/app/public/*
+!api/storage/**/.gitignore
+
+# Test / coverage
+coverage/
+test-results/
+playwright-report/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
