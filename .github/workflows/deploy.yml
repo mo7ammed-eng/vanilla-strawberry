@@ -1,0 +1,77 @@
+﻿name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Configure SSH
+        env:
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=yes -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" 'bash -se' <<'REMOTE'
+          set -e
+
+          export PATH="$HOME/.nvm/versions/node/v24.22.3/bin:$PATH"
+
+          cd /var/www/vanilla-strawberry
+
+          echo "Pulling latest code..."
+          git fetch origin main
+          git reset --hard origin/main
+
+          echo "Installing frontend dependencies..."
+          npm ci
+
+          echo "Installing Laravel dependencies..."
+          cd api
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+          echo "Refreshing Laravel cache..."
+          php8.4 artisan optimize:clear
+          php8.4 artisan config:cache
+
+          cd ..
+
+          echo "Building Next.js..."
+          NODE_OPTIONS=--max-old-space-size=2048 npm run build
+
+          echo "Restarting PM2..."
+          pm2 restart vanilla-strawberry-web --update-env
+          pm2 save
+
+          echo "Checking website..."
+          curl -fsS http://127.0.0.1:3000/ >/dev/null
+
+          echo "Deployment successful!"
+          REMOTE
