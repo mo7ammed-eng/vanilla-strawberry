@@ -19,6 +19,8 @@ use App\Http\Controllers\Api\Admin\ReservationController as AdminReservationCont
 use App\Http\Controllers\Api\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Api\Admin\TableController as AdminTableController;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Auth\PasswordController;
+use App\Http\Controllers\Api\Auth\TokenController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\Chef\OrderController as ChefOrderController;
 use App\Http\Controllers\Api\CouponValidationController;
@@ -58,10 +60,14 @@ Route::prefix('v1')->group(function (): void {
     Route::prefix('auth')->group(function (): void {
         Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth');
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth');
+        Route::post('/forgot-password', [PasswordController::class, 'forgot'])->middleware('throttle:auth');
+        Route::post('/reset-password', [PasswordController::class, 'reset'])->middleware('throttle:auth');
 
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('/me', [AuthController::class, 'me']);
             Route::patch('/profile', [AuthController::class, 'updateProfile']);
+            Route::patch('/password', [PasswordController::class, 'change'])->middleware('throttle:auth');
+            Route::post('/refresh', [TokenController::class, 'refresh']);
             Route::post('/logout', [AuthController::class, 'logout']);
         });
     });

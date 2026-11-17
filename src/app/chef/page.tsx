@@ -88,7 +88,7 @@ export default function ChefBoardPage() {
   const advance = async (order: Order, status: OrderStatus) => {
     setBusyId(order.id);
     try {
-      await api.patch<Order>(`/chef/orders/${order.id}/status`, { status });
+      await api.patch<Order>(`/chef/orders/${order.order_number}/status`, { status });
       toast(`${order.order_number} moved to ${status.replace("_", " ")}.`, "success");
       await load(true);
     } catch (err) {

@@ -164,4 +164,43 @@ class AdminTest extends ShopTestCase
             ->getJson('/api/v1/admin/dashboard')
             ->assertForbidden();
     }
+
+    public function test_settings_updates_are_validated_before_being_stored(): void
+    {
+        $admin = $this->user(Role::Admin);
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson('/api/v1/admin/settings', [
+                'settings' => [
+                    'restaurant_name' => str_repeat('a', 121),
+                    'tax_rate_bps' => -1,
+                    'map_url' => 'javascript:alert(1)',
+                ],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'settings.restaurant_name',
+                'settings.tax_rate_bps',
+                'settings.map_url',
+            ]);
+    }
+
+    public function test_an_admin_cannot_cancel_a_completed_order(): void
+    {
+        $admin = $this->user(Role::Admin);
+        $catalog = $this->catalog();
+
+        $orderNumber = $this->postJson('/api/v1/orders', $this->orderPayload($catalog['product']))->assertCreated()
+            ->json('data.order_number');
+
+        foreach (['confirmed', 'preparing', 'ready', 'completed'] as $status) {
+            $this->actingAs($admin, 'sanctum')
+                ->patchJson("/api/v1/admin/orders/{$orderNumber}/status", ['status' => $status])
+                ->assertOk();
+        }
+
+        $this->actingAs($admin, 'sanctum')
+            ->patchJson("/api/v1/admin/orders/{$orderNumber}/status", ['status' => 'cancelled'])
+            ->assertUnprocessable();
+    }
 }

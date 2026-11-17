@@ -94,7 +94,7 @@ export default function CheckoutPage() {
     setCouponLoading(true);
     setCouponError(null);
     try {
-      const response = await api.post<Coupon>("/coupons/validate", { code });
+      const response = await api.post<Coupon>("/coupons/validate", { code, subtotal_cents: subtotalCents });
       if (subtotalCents < response.data.min_order_cents) {
         setCouponError(`This coupon needs a minimum order of ${formatMoney(response.data.min_order_cents)}.`);
         return;

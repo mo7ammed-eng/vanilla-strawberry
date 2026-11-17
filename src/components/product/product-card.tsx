@@ -22,7 +22,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   return (
     <article className="group flex flex-col">
       <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-vanilla-100">
-        <Link href={`/menu/${product.slug}`} aria-label={`View ${product.name}`} className="block h-full">
+        <Link href={`/menu/${product.slug}`} aria-label={`View ${product.name}`} className="relative block h-full">
           <Image
             src={product.image_url}
             alt={product.name}

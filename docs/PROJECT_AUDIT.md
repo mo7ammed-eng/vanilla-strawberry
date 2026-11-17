@@ -2,13 +2,13 @@
 
 **Audit date:** 2026-11-17
 **Audit scope:** full repository at `G:\shop-deploy` — Next.js frontend, Laravel API, root tooling, docs, assets, tests, git state, and a live browser smoke test.
-**Mode:** read-only audit followed by one small, verified implementation batch. No database was reset and no user work was overwritten.
+**Mode:** audit followed by verified hardening/feature implementation batches. No database was reset and no user work was overwritten.
 
 ## 1. Executive summary
 
-This repository is a **working monorepo**, not a documentation-only scaffold. It contains a complete Next.js 16 / React 19 storefront, a Laravel 12-style API in `api/` with Sanctum auth, a large feature set (catalog, cart, checkout, orders, QR tables, chef board, admin operations, reservations, coupons, notifications), 41 passing backend tests, and cross-platform root scripts.
+This repository is a **working monorepo**, not a documentation-only scaffold. It contains a complete Next.js 16 / React 19 storefront, a Laravel 13 API in `api/` with Sanctum auth, a large feature set (catalog, cart, checkout, orders, QR tables, chef board, admin operations, reservations, coupons, notifications), 51 passing backend tests, and cross-platform root scripts.
 
-The earlier audit (2026-11-14) was accurate at the time but is now stale. The current state is **implementation with remaining polish and verification gaps**, not greenfield work. The most important remaining work is design-token alignment with the requested palette, deeper admin analytics, expanded browser/accessibility coverage, and deployment configuration.
+The platform has now been hardened beyond the earlier audit: password confirmation is enforced end to end, self-service password change/reset exists, Sanctum tokens expire and rotate, settings input is strictly validated, notification URLs are restricted to internal paths, private dashboards are `noindex`, branding/SEO are driven by the admin website name, and mobile navigation includes a Font Awesome QR scanner. Remaining work is deeper E2E/accessibility coverage, deploying Docker/compose config, and resolving the missing committed logo asset.
 
 ## 2. Repository inventory
 
@@ -48,16 +48,17 @@ Verified locally on 2026-11-17:
 | Catalog & collections | Implemented | `/menu`, category/collection filters, search, public products API. |
 | Product detail & customization | Implemented | Variants, add-ons, live pricing, quantity stepper. |
 | Cart & checkout | Implemented | Persisted cart provider, cart page, new cart drawer, coupon validation, server-side order recalculation. |
-| Authentication | Implemented | Sanctum bearer tokens, register/login/logout/me, role-aware UI. |
-| Customer account | Implemented | Orders, order detail, addresses, profile, reservations. |
-| QR table ordering | Implemented | Token validation, explicit session start, source/table attribution, no occupancy on page load. |
+| Authentication | Implemented + hardened | Sanctum bearer tokens, register/login/logout/me, password confirmation, forgot/reset/change password, expiring/rotating/revocable tokens, role-aware UI. |
+| Customer account | Implemented | Orders, order detail, addresses, profile with password change, reservations. |
+| QR table ordering | Implemented | Token validation, explicit session start, QR camera/image scanner in mobile nav, source/table attribution, no occupancy on page load. |
 | Chef workflow | Implemented | Order board, item/customization visibility, permitted status transitions. |
 | Admin operations | Implemented (breadth) | 13 admin controllers covering catalog, orders, users, tables, reservations, coupons, gallery, settings; analytics depth still needs review. |
 | Reservations & coupons | Implemented | Server-side flags, validation, double-booking and usage-limit rules. |
 | Notifications | Implemented | Persisted notifications, unread indicators, UI bell. |
 | Real-time | Partial | Broadcast-ready events and polling fallback; Reverb not configured in the local environment. |
-| Security | Implemented core | Server-side money/validation, roles, guest-token checks, rate limits; broader audit remains. |
-| Tests | Partial → strong backend | 41 backend tests / 208 assertions pass; frontend lint/typecheck/build pass; targeted browser smoke passes. |
+| Security | Hardened core | Server-side money/validation, roles, guest-token checks, rate limits, strict settings validation, internal-only notification URLs, token expiration/rotation/revocation, `noindex` private dashboards; no claim of 100% security. |
+| Tests | Strong backend + smoke | 51 backend tests / 251 assertions pass; frontend lint/typecheck/build pass; 10-route browser smoke passes with zero console errors. |
+| SEO / branding | Implemented | Dynamic website name in logo/title/metadata, canonical/OG/Twitter tags, `robots.ts`, `sitemap.ts`, private-area noindex. |
 | Root tooling | Implemented | `setup`, `dev`, `build`, `start`, `test`, `lint`, `health`, `db:*`. |
 | Deployment config | Partial | Docs exist; Docker/compose files are not committed. |
 | Documentation | Being synchronized | `PROJECT_AUDIT.md`, `DEVELOPMENT_PLAN.md`, and `CHANGELOG.md` revised on 2026-11-17. |
@@ -68,12 +69,14 @@ Verified locally on 2026-11-17:
 2. REST API is authoritative; WebSockets, when configured, deliver updates only.
 3. Exactly three roles: `customer`, `chef`, `admin`.
 4. Money is stored as integer minor units (cents).
-5. Sanctum bearer tokens are used for cross-origin auth; no server secrets are exposed to the browser.
+5. Sanctum bearer tokens are used for cross-origin auth; tokens expire (default 10080 minutes), rotate through `/auth/refresh`, and are revoked on password change/reset; no server secrets are exposed to the browser.
 6. Feature flags are enforced server-side for reservations and coupons.
 7. QR table tokens are unguessable; table sessions close explicitly.
 8. Order statuses follow a validated transition service.
 9. Payment is pay-on-collection / pay-on-delivery; no fake card processing.
 10. Polling is the graceful fallback when Reverb is unavailable.
+11. The admin `restaurant_name` setting is the authoritative website name for navigation, metadata, footer, and receipts.
+12. Notification URLs are accepted only when they are internal paths.
 
 ## 6. Risks and blockers
 
@@ -83,23 +86,28 @@ Verified locally on 2026-11-17:
 | Reverb not configured | Medium | Keep polling fallback; document separate WebSocket process requirement. |
 | No payment provider | Low | Current checkout is explicitly pay-on-collection/delivery; do not simulate card success. |
 | Prior uncommitted work in working tree | Medium | Inspect diffs before editing; never discard or reset. |
-| Browser coverage currently limited to cart flow | Medium | Expand E2E to auth, QR/Chef, checkout, admin. |
+| Browser coverage is smoke-level, not durable E2E | Medium | Expand E2E to auth, QR/Chef, checkout, admin, keyboard/accessibility. |
+| Requested logo asset missing | Medium | `public/assets/img/logo.png` is not present; text logo fallback is used. Do not generate or replace the asset without approval. |
+| Local port 8000 occupied by unrelated process | Low | Verification used isolated ports 8100/3101; `npm run dev` reports the conflict clearly. |
 | Deployment config absent | Medium | Add Docker/compose and environment checklist in a later phase. |
 | Requested palette | Resolved | Six requested values applied as source-of-truth tokens on 2026-11-17; see `DESIGN_SYSTEM.md`. |
+| Dev-only npm audit findings | Low | `npm audit --omit=dev` reports 0 production vulnerabilities; 7 moderate dev-only findings remain. |
 
 ## 7. Verification evidence (fresh, 2026-11-17)
 
 | Command / check | Result |
 |---|---|
-| `npm run lint` | Passed, no errors. |
+| `vendor/bin/pint --dirty --format agent` | Passed. |
+| `php artisan test --compact` | Passed: 51 tests, 251 assertions, 2507 ms. |
 | `npm run typecheck` | Passed, no errors. |
-| `npm run build` | Passed; 30 routes generated. |
-| `php artisan test --compact` | Passed: 41 tests, 208 assertions, 2825 ms. |
-| Python Playwright browser smoke | Passed: cart drawer open/close, default variant name, quantity +/-, remove, 390 px layout, no console/page errors, no failed same-origin requests. |
-| Palette verification | Passed: body background `rgb(255, 248, 239)` and CSS variables match all six requested palette values. |
+| `npm run lint` | Passed, no errors. |
+| `npm run build` | Passed; 34 routes generated. |
+| `npm audit --omit=dev` | 0 production vulnerabilities; 7 moderate dev-only findings reported by install. |
+| Python Playwright browser smoke | Passed: 10 routes, dynamic brand title, no header "Order now" CTA, mobile QR dialog with camera/upload actions, `robots.txt`, `sitemap.xml`, 390 px viewport, 0 console/page errors. |
+| API health | Passed at isolated `http://127.0.0.1:8100/api/v1/health`. |
 
-Browser checks ran on an isolated frontend port `3100` because port `3000` was occupied by an unrelated Next.js process. Chromium was launched with CORS disabled for the smoke test only; no application CORS code was changed.
+Browser checks ran against a production build on isolated ports `3101` (frontend) and `8100` (API) because port `3000/8000` were occupied by unrelated processes. CORS was verified with the API `FRONTEND_URL` matching the isolated frontend origin; no permissive CORS code was added.
 
 ## 8. Conclusion and next step
 
-The platform is already functional and safe to extend in small stages. The next safe phase is polish, not rebuild: align design tokens with the requested vanilla/strawberry palette, deepen admin analytics, add durable browser E2E coverage, and add deployment configuration. See `DEVELOPMENT_PLAN.md` for the revised phase status.
+The platform is functional, hardened in the audited areas, and safe to extend in small stages. The next safe phase is durable browser E2E/accessibility coverage, admin analytics polish, deployment configuration, and supplying the missing committed logo asset. See `DEVELOPMENT_PLAN.md` for the revised phase status.

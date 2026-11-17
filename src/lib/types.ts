@@ -113,6 +113,7 @@ export interface PublicSettings {
   hours: WeekdayHours[];
   map_url: string;
   instagram: string;
+  established_year: number;
   currency: string;
   currency_symbol: string;
   tax_rate_bps: number;

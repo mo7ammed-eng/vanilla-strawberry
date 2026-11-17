@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { RoleGate } from "@/components/auth/role-gate";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { StaffHeader } from "@/components/layout/staff-header";
+
+export const metadata: Metadata = {
+  title: "Admin",
+  robots: { index: false, follow: false },
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (

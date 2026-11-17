@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 
@@ -18,8 +19,10 @@ export function SiteFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader onCartOpen={() => setCartOpen(true)} />
-      <main id="main-content" className="flex-1">{children}</main>
+      <main id="main-content" className="flex-1 pb-20 lg:pb-0">{children}</main>
       <SiteFooter />
+      <div className="h-16 lg:hidden" aria-hidden="true" />
+      <MobileBottomNav />
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );

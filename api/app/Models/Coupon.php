@@ -69,7 +69,7 @@ class Coupon extends Model
     public function discountFor(int $subtotalCents): int
     {
         $discount = match ($this->discount_type) {
-            DiscountType::Percentage => (int) round($subtotalCents * ($this->value / 10000)),
+            DiscountType::Percentage => intdiv($subtotalCents * $this->value + 5000, 10000),
             DiscountType::Fixed => $this->value,
         };
 

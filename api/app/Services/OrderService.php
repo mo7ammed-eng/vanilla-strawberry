@@ -16,6 +16,7 @@ use App\Models\Setting;
 use App\Models\TableSession;
 use App\Models\User;
 use App\Notifications\OrderPlacedNotification;
+use App\Notifications\OrderStatusChangedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -26,8 +27,7 @@ class OrderService
     public function __construct(
         private readonly CouponService $coupons,
         private readonly OrderStatusService $statuses,
-    ) {
-    }
+    ) {}
 
     /** @param array<string, mixed> $data */
     public function create(array $data, ?User $user): Order
@@ -52,8 +52,8 @@ class OrderService
             }
 
             $taxable = max(0, $subtotal - $discount);
-            $tax = (int) round($taxable * (Setting::int('tax_rate_bps', 888) / 10000));
-            $serviceFee = (int) round($subtotal * (Setting::int('service_fee_bps', 0) / 10000));
+            $tax = intdiv($taxable * Setting::int('tax_rate_bps', 888) + 5000, 10000);
+            $serviceFee = intdiv($subtotal * Setting::int('service_fee_bps', 0) + 5000, 10000);
             $deliveryFee = 0;
 
             if ($delivery) {
@@ -276,7 +276,7 @@ class OrderService
         $order->save();
 
         if ($order->user !== null) {
-            $order->user->notify(new \App\Notifications\OrderStatusChangedNotification($order));
+            $order->user->notify(new OrderStatusChangedNotification($order));
         }
 
         return $order->fresh(['items.addOns', 'table']);

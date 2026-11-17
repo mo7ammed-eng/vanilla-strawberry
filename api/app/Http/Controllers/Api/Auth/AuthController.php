@@ -40,7 +40,7 @@ class AuthController extends Controller
         $user = User::query()->where('email', $request->string('email'))->first();
 
         if ($user === null || ! Hash::check($request->string('password')->toString(), $user->password)) {
-            return ApiResponse::error('Those credentials do not match our records.', 422, [
+            return ApiResponse::error('Those credentials do not match our records.', 401, [
                 'email' => ['Those credentials do not match our records.'],
             ]);
         }

@@ -165,13 +165,6 @@ export function SiteHeader({ onCartOpen }: { onCartOpen?: () => void }) {
             </Link>
           )}
 
-          <Link
-            href="/menu"
-            className="hidden h-10 items-center rounded-full bg-strawberry-500 px-4 text-xs font-semibold text-vanilla-0 transition hover:bg-strawberry-700 md:inline-flex"
-          >
-            Order now
-          </Link>
-
           <button
             type="button"
             onClick={() => setMobileOpen((value) => !value)}
@@ -238,13 +231,6 @@ export function SiteHeader({ onCartOpen }: { onCartOpen?: () => void }) {
                   Sign in
                 </Link>
               )}
-              <Link
-                href="/menu"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-strawberry-500 px-5 text-sm font-semibold text-vanilla-0"
-              >
-                <ShoppingBag className="h-4 w-4" />
-                Order now
-              </Link>
               <a
                 href={`tel:${settings.phone.replace(/[^0-9+]/g, "")}`}
                 className="py-2 text-center text-xs text-ink-600"

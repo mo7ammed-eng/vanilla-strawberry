@@ -59,7 +59,7 @@ export default function ChefOrderPage() {
     if (!order) return;
     setBusy(true);
     try {
-      const response = await api.patch<Order>(`/chef/orders/${order.id}/status`, { status });
+      const response = await api.patch<Order>(`/chef/orders/${order.order_number}/status`, { status });
       setOrder(response.data);
       toast(`Order moved to ${status.replace("_", " ")}.`, "success");
     } catch (err) {

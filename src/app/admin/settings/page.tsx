@@ -224,9 +224,9 @@ export default function AdminSettingsPage() {
 
       <section className="rounded-2xl border border-border-warm bg-vanilla-0 p-5">
         <h2 className="text-lg font-semibold">Restaurant identity</h2>
-        <p className="text-xs text-ink-600">Shown on the home page, footer, and receipts.</p>
+        <p className="text-xs text-ink-600">Shown in the site title, navigation, footer, search results, and receipts.</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="Restaurant name" htmlFor="settings-name" required>
+          <Field label="Website name" htmlFor="settings-name" required>
             <Input id="settings-name" value={draft.restaurant_name} onChange={(event) => patch({ restaurant_name: event.target.value })} required />
           </Field>
           <Field label="Tagline" htmlFor="settings-tagline">

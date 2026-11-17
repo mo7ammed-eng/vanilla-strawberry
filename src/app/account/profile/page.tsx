@@ -12,7 +12,7 @@ import { useToast } from "@/providers/toast-provider";
 import type { User } from "@/lib/types";
 
 export default function ProfilePage() {
-  const { user, refresh } = useAuth();
+  const { user, refresh, changePassword } = useAuth();
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -20,6 +20,12 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirmation, setNewPasswordConfirmation] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordFieldErrors, setPasswordFieldErrors] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -51,6 +57,28 @@ export default function ProfilePage() {
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const submitPassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setPasswordSaving(true);
+    setPasswordError(null);
+    setPasswordFieldErrors({});
+
+    try {
+      await changePassword(currentPassword, newPassword, newPasswordConfirmation);
+      setCurrentPassword("");
+      setNewPassword("");
+      setNewPasswordConfirmation("");
+      toast("Password updated.", "success");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setPasswordFieldErrors(err.errors);
+      }
+      setPasswordError(errorMessage(err));
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -116,13 +144,60 @@ export default function ProfilePage() {
             />
           </Field>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-warm pt-4">
-          <p className="flex items-center gap-1.5 text-xs text-ink-600">
-            <ShieldCheck className="h-3.5 w-3.5 text-success" />
-            Password changes are handled by the restaurant team for now.
-          </p>
+        <div className="flex justify-end border-t border-border-warm pt-4">
           <Button type="submit" loading={saving}>
             Save changes
+          </Button>
+        </div>
+      </form>
+
+      <form onSubmit={submitPassword} className="space-y-5 rounded-2xl border border-border-warm bg-vanilla-0 p-6" noValidate>
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-success" />
+          <h2 className="font-display text-lg">Change password</h2>
+        </div>
+        {passwordError ? <FormError message={passwordError} /> : null}
+        <Field label="Current password" htmlFor="current-password" required error={passwordFieldErrors.current_password?.[0]}>
+          <Input
+            id="current-password"
+            type="password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            autoComplete="current-password"
+            required
+          />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label="New password"
+            htmlFor="new-password"
+            required
+            hint="At least 8 characters, with letters and numbers."
+            error={passwordFieldErrors.password?.[0]}
+          >
+            <Input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              autoComplete="new-password"
+              required
+            />
+          </Field>
+          <Field label="Confirm new password" htmlFor="new-password-confirmation" required>
+            <Input
+              id="new-password-confirmation"
+              type="password"
+              value={newPasswordConfirmation}
+              onChange={(event) => setNewPasswordConfirmation(event.target.value)}
+              autoComplete="new-password"
+              required
+            />
+          </Field>
+        </div>
+        <div className="flex justify-end border-t border-border-warm pt-4">
+          <Button type="submit" loading={passwordSaving}>
+            Update password
           </Button>
         </div>
       </form>

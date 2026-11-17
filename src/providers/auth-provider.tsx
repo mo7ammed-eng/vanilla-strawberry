@@ -1,14 +1,23 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api, getStoredToken, setStoredToken } from "@/lib/api";
+import { ApiError, api, getStoredToken, setStoredToken } from "@/lib/api";
 import type { User } from "@/lib/types";
 
 interface AuthContextValue {
   user: User | null;
   ready: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (payload: { name: string; email: string; password: string; phone?: string }) => Promise<User>;
+  register: (payload: {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+    phone?: string;
+  }) => Promise<User>;
+  changePassword: (currentPassword: string, password: string, passwordConfirmation: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string, token: string, password: string, passwordConfirmation: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<User | null>;
 }
@@ -29,11 +38,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       return null;
     }
+
     try {
       const response = await api.get<User>("/auth/me");
       setUser(response.data);
       return response.data;
-    } catch {
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        try {
+          const rotated = await api.post<{ token: string }>("/auth/refresh");
+          setStoredToken(rotated.data.token);
+          const renewed = await api.get<User>("/auth/me");
+          setUser(renewed.data);
+          return renewed.data;
+        } catch {
+          setStoredToken(null);
+          setUser(null);
+          return null;
+        }
+      }
+
       setStoredToken(null);
       setUser(null);
       return null;
@@ -74,11 +98,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(
-    async (payload: { name: string; email: string; password: string; phone?: string }) => {
+    async (payload: {
+      name: string;
+      email: string;
+      password: string;
+      password_confirmation: string;
+      phone?: string;
+    }) => {
       const response = await api.post<AuthResponse>("/auth/register", payload);
       setStoredToken(response.data.token);
       setUser(response.data.user);
       return response.data.user;
+    },
+    [],
+  );
+
+  const changePassword = useCallback(
+    async (currentPassword: string, password: string, passwordConfirmation: string) => {
+      const response = await api.patch<{ token: string }>("/auth/password", {
+        current_password: currentPassword,
+        password,
+        password_confirmation: passwordConfirmation,
+      });
+      setStoredToken(response.data.token);
+    },
+    [],
+  );
+
+  const forgotPassword = useCallback(async (email: string) => {
+    await api.post("/auth/forgot-password", { email });
+  }, []);
+
+  const resetPassword = useCallback(
+    async (email: string, token: string, password: string, passwordConfirmation: string) => {
+      await api.post("/auth/reset-password", {
+        email,
+        token,
+        password,
+        password_confirmation: passwordConfirmation,
+      });
     },
     [],
   );
@@ -95,8 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, ready, login, register, logout, refresh }),
-    [user, ready, login, register, logout, refresh],
+    () => ({ user, ready, login, register, changePassword, forgotPassword, resetPassword, logout, refresh }),
+    [user, ready, login, register, changePassword, forgotPassword, resetPassword, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

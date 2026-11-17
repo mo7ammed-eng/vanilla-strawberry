@@ -3,6 +3,7 @@ import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/providers/app-providers";
 import { SiteFrame } from "@/components/layout/site-frame";
+import { getSiteSettings } from "@/lib/site-settings";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -18,27 +19,36 @@ const manrope = Manrope({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    default: "Vanilla & Strawberry — Small-batch gelato in Brooklyn",
-    template: "%s · Vanilla & Strawberry",
-  },
-  description:
-    "Small-batch gelato, sorbet and layered sundaes made slowly in Brooklyn. Order online, reserve a table, or scan the QR code at your table.",
-  openGraph: {
-    title: "Vanilla & Strawberry",
-    description: "Small-batch gelato, made slowly. Brooklyn.",
-    type: "website",
-    images: ["/images/strawberry-cloud.jpg"],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Vanilla & Strawberry",
-    description: "Small-batch gelato, made slowly. Brooklyn.",
-    images: ["/images/strawberry-cloud.jpg"],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  const name = settings.restaurant_name;
+  const description = settings.tagline;
+  const image = "/images/strawberry-cloud.jpg";
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: `${name} — Small-batch gelato in Brooklyn`,
+      template: `%s · ${name}`,
+    },
+    description,
+    alternates: { canonical: "/" },
+    openGraph: {
+      title: name,
+      description,
+      type: "website",
+      siteName: name,
+      images: [{ url: image, width: 1200, height: 630, alt: name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: name,
+      description,
+      images: [image],
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#FFF8EF",

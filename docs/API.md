@@ -20,6 +20,15 @@ Success:
 
 Validation/error response should be consistent and safe, with field errors where applicable. Align with existing Laravel conventions rather than introducing an unnecessary custom framework.
 
+## Authentication endpoints
+- `POST /api/v1/auth/register` — requires `password_confirmation`.
+- `POST /api/v1/auth/login` — returns a Sanctum bearer token.
+- `POST /api/v1/auth/forgot-password` — generic response; emails a reset link built from `app.frontend_url`.
+- `POST /api/v1/auth/reset-password` — requires `token`, `email`, `password`, `password_confirmation`; revokes existing tokens on success.
+- `POST /api/v1/auth/refresh` — authenticated; rotates the current bearer token.
+- `PATCH /api/v1/auth/password` — authenticated; verifies `current_password`, revokes old tokens, returns a new token.
+- `GET /api/v1/auth/me`, `POST /api/v1/auth/logout` — authenticated account/session endpoints.
+
 ## Security
 - Never trust client price, role, discount, order total, or table status.
 - Authorize access to each order and customer resource.

@@ -96,4 +96,32 @@ class ChefOrderTest extends ShopTestCase
             ->assertJsonCount(2, 'data')
             ->assertJsonPath('meta.counts.pending', 2);
     }
+
+    public function test_the_kitchen_queue_can_filter_by_scope(): void
+    {
+        $catalog = $this->catalog();
+        $customer = $this->user(Role::Customer);
+        $chef = $this->user(Role::Chef);
+
+        $this->actingAs($customer, 'sanctum')
+            ->postJson('/api/v1/orders', $this->orderPayload($catalog['product']))
+            ->assertCreated();
+
+        $order = Order::firstOrFail();
+        foreach (['confirmed', 'preparing', 'ready', 'completed'] as $status) {
+            $this->actingAs($chef, 'sanctum')
+                ->patchJson("/api/v1/chef/orders/{$order->order_number}/status", ['status' => $status])
+                ->assertOk();
+        }
+
+        $this->actingAs($chef, 'sanctum')
+            ->getJson('/api/v1/chef/orders?scope=active')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        $this->actingAs($chef, 'sanctum')
+            ->getJson('/api/v1/chef/orders?scope=all')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+    }
 }

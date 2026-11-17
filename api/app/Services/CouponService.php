@@ -35,16 +35,21 @@ class CouponService
         return $coupon;
     }
 
-    public function validateForSubtotal(string $code, int $subtotalCents, bool $lock = false): Coupon
+    public function validate(string $code, ?int $subtotalCents = null, bool $lock = false): Coupon
     {
         $coupon = $this->findAvailable($code, $lock);
 
-        if ($subtotalCents < $coupon->min_order_cents) {
+        if ($subtotalCents !== null && $subtotalCents < $coupon->min_order_cents) {
             throw ValidationException::withMessages([
                 'coupon_code' => 'This coupon needs a minimum order of $'.number_format($coupon->min_order_cents / 100, 2).'.',
             ]);
         }
 
         return $coupon;
+    }
+
+    public function validateForSubtotal(string $code, int $subtotalCents, bool $lock = false): Coupon
+    {
+        return $this->validate($code, $subtotalCents, $lock);
     }
 }

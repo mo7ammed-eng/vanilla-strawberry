@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\Role;
-use App\Models\User;
+use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 use Tests\ShopTestCase;
 
 class AuthTest extends ShopTestCase
@@ -77,6 +78,42 @@ class AuthTest extends ShopTestCase
 
         $this->actingAs($customer, 'sanctum')->getJson('/api/v1/admin/dashboard')->assertForbidden();
         $this->actingAs($customer, 'sanctum')->getJson('/api/v1/chef/orders')->assertForbidden();
+    }
+
+    public function test_a_bearer_token_can_be_rotated(): void
+    {
+        $user = $this->user(Role::Customer);
+        $token = $user->createToken('web')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/auth/refresh')
+            ->assertOk();
+
+        $newToken = $response->json('data.token');
+        $this->assertNotEmpty($newToken);
+        $this->assertNotSame($token, $newToken);
+        $this->assertDatabaseCount('personal_access_tokens', 1);
+        $this->assertNull(PersonalAccessToken::findToken($token));
+        $this->assertNotNull(PersonalAccessToken::findToken($newToken));
+    }
+
+    public function test_notification_links_are_restricted_to_internal_paths(): void
+    {
+        $user = $this->user(Role::Customer);
+        $user->notifications()->create([
+            'id' => Str::uuid()->toString(),
+            'type' => 'TestNotification',
+            'data' => [
+                'title' => 'Order update',
+                'body' => 'Your order is ready.',
+                'url' => 'https://malicious.example/steal',
+            ],
+        ]);
+
+        $this->actingAs($user, 'sanctum')
+            ->getJson('/api/v1/notifications')
+            ->assertOk()
+            ->assertJsonPath('data.0.url', null);
     }
 
     public function test_a_customer_can_update_their_profile(): void

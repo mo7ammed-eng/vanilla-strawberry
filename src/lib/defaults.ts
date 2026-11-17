@@ -17,6 +17,7 @@ export const defaultSettings: PublicSettings = {
   ],
   map_url: "https://maps.google.com/?q=14+Orchard+Lane+Brooklyn+NY",
   instagram: "@vanillaandstrawberry",
+  established_year: 2018,
   currency: "USD",
   currency_symbol: "$",
   tax_rate_bps: 888,

@@ -72,7 +72,7 @@ export function NotificationBell() {
       }
     }
     setOpen(false);
-    if (item.url) router.push(item.url);
+    if (item.url && item.url.startsWith("/") && !item.url.startsWith("//")) router.push(item.url);
   };
 
   const markAll = async () => {

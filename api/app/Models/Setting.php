@@ -69,6 +69,7 @@ class Setting extends Model
             'hours' => static::get('hours', []),
             'map_url' => static::get('map_url', 'https://maps.google.com/?q=14+Orchard+Lane+Brooklyn+NY'),
             'instagram' => static::get('instagram', '@vanillaandstrawberry'),
+            'established_year' => static::int('established_year', 2018),
             'currency' => static::get('currency', 'USD'),
             'currency_symbol' => static::get('currency_symbol', '$'),
             'tax_rate_bps' => static::int('tax_rate_bps', 888),

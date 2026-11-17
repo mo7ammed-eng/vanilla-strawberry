@@ -35,12 +35,14 @@ export default function RegisterPage() {
     }
 
     try {
-      await register({
-        name: name.trim(),
-        email: email.trim(),
-        password,
-        phone: phone.trim() || undefined,
-      });
+        await register({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          password_confirmation: confirmation,
+          phone: phone.trim() || undefined,
+        });
+
       router.replace("/account");
     } catch (err) {
       setError(errorMessage(err));

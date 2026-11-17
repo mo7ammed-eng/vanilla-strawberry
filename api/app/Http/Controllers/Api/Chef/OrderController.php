@@ -29,11 +29,12 @@ class OrderController extends Controller
             ->with(['items.addOns', 'table'])
             ->whereIn('source', ['online', 'qr']);
 
-        match ($validated['scope'] ?? 'active') {
-            'today' => $query->today(),
-            'all' => null,
-            default => $query->active(),
-        };
+        $scope = $validated['scope'] ?? 'active';
+        if ($scope === 'today') {
+            $query->today();
+        } elseif ($scope !== 'all') {
+            $query->active();
+        }
 
         if (! empty($validated['status'])) {
             $query->where('status', $validated['status']);

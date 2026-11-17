@@ -17,9 +17,10 @@ class CouponValidationController extends Controller
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:40'],
+            'subtotal_cents' => ['nullable', 'integer', 'min:0', 'max:999999999'],
         ]);
 
-        $coupon = $coupons->findAvailable($validated['code']);
+        $coupon = $coupons->validate($validated['code'], $validated['subtotal_cents'] ?? null);
 
         return ApiResponse::success(new CouponResource($coupon), 'Coupon is valid.');
     }

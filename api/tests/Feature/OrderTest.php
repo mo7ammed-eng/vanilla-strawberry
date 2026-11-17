@@ -123,4 +123,25 @@ class OrderTest extends ShopTestCase
             ->assertUnprocessable()
             ->assertJsonValidationErrors('items.0.product_id');
     }
+
+    public function test_a_coupon_below_the_minimum_order_is_rejected_when_a_subtotal_is_provided(): void
+    {
+        $catalog = $this->catalog(650);
+
+        Coupon::create([
+            'code' => 'STRAWBERRY10',
+            'description' => 'Ten percent off.',
+            'discount_type' => 'percentage',
+            'value' => 1000,
+            'min_order_cents' => 1500,
+            'times_used' => 0,
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'is_active' => true,
+        ]);
+
+        $this->postJson('/api/v1/coupons/validate', ['code' => 'STRAWBERRY10', 'subtotal_cents' => 500])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('coupon_code');
+    }
 }

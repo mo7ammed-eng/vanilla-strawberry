@@ -49,6 +49,11 @@ export default function HomePage() {
   const featured = data?.collections.best.length ? data.collections.best : (data?.products.slice(0, 4) ?? []);
   const seasonal = data?.collections.new[0] ?? data?.products[0] ?? null;
   const gallery = data?.gallery.slice(0, 4) ?? [];
+  const heroProduct =
+    data?.products.find((product) => product.slug === "strawberry-cloud") ??
+    data?.collections.best[0] ??
+    data?.products[0] ??
+    null;
 
   return (
     <>
@@ -57,7 +62,7 @@ export default function HomePage() {
           <div className="max-w-xl">
             <p className="eyebrow flex items-center gap-2">
               <span className="h-px w-8 bg-strawberry-500" />
-              Brooklyn · Small batch since 2019
+              Brooklyn · Small batch since {settings.established_year}
             </p>
             <h1 className="mt-5 text-display">
               Gelato, made
@@ -109,13 +114,19 @@ export default function HomePage() {
             </div>
             <div className="absolute -bottom-5 left-4 right-4 rounded-2xl border border-border-warm bg-vanilla-0/95 p-4 shadow-soft backdrop-blur sm:-left-6 sm:right-auto sm:w-72">
               <p className="eyebrow">Today at the counter</p>
-              <div className="mt-2 flex items-end justify-between gap-3">
-                <div>
-                  <p className="font-display text-lg leading-tight">Strawberry Cloud</p>
-                  <p className="mt-0.5 text-xs text-ink-600">Roasted berries, sweet cream</p>
-                </div>
-                <span className="font-semibold tabular-nums">{formatMoney(750)}</span>
-              </div>
+              {heroProduct ? (
+                <Link href={`/menu/${heroProduct.slug}`} className="group mt-2 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="font-display text-lg leading-tight">{heroProduct.name}</p>
+                    <p className="mt-0.5 line-clamp-1 text-xs text-ink-600">{heroProduct.short_description}</p>
+                  </div>
+                  <span className="shrink-0 font-semibold tabular-nums">{formatMoney(heroProduct.price_cents)}</span>
+                </Link>
+              ) : loading ? (
+                <Skeleton className="mt-2 h-10 w-full" />
+              ) : (
+                <p className="mt-2 text-sm text-ink-600">Ask about today&apos;s batch.</p>
+              )}
             </div>
             <div className="absolute -right-3 top-6 hidden rotate-3 rounded-full bg-vanilla-200 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-700 shadow-soft sm:block">
               Batch no. 114

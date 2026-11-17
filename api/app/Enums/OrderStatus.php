@@ -50,7 +50,7 @@ enum OrderStatus: string
             self::Confirmed => [self::Preparing, self::Cancelled],
             self::Preparing => [self::Ready, self::Cancelled],
             self::Ready => [self::Completed, self::Cancelled],
-            self::Completed => [self::Cancelled],
+            self::Completed => [],
             self::Cancelled => [],
         };
     }
