@@ -158,6 +158,7 @@ export default function CheckoutPage() {
       }
       clearCart();
       toast("Order placed. The kitchen has it.", "success");
+      setSubmitting(false);
       router.push(`/order/${order.order_number}`);
     } catch (err) {
       if (err instanceof ApiError) {

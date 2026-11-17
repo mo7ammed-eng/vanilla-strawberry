@@ -7,17 +7,20 @@ Clean premium dessert editorial. Vanilla is the canvas; strawberry is the signat
 
 | Token | Value | Use |
 |---|---|---|
-| vanilla-50 | #FFF9F0 | Main page background |
-| vanilla-0 | #FFFDF9 | Raised surfaces |
-| strawberry-500 | #E94B62 | Primary actions and highlights |
-| strawberry-700 | #C93650 | Hover/active emphasis |
-| strawberry-100 | #F9DCE1 | Soft highlight backgrounds |
+| vanilla-cream | #FFF8EF | Main page background (`vanilla-50`) |
+| vanilla-0 | #FFFDF9 | Raised warm surfaces |
+| strawberry | #E94B68 | Primary actions and highlights (`strawberry-500`) |
+| deep-berry | #982D49 | Eyebrows and emphasis (`strawberry-800`) |
+| soft-pink | #F8DDE2 | Soft highlight backgrounds (`strawberry-100`) |
+| chocolate | #392725 | Main text and dark surfaces (`ink-900`) |
+| white | #FFFFFF | Pure white where contrast requires it |
 | vanilla-200 | #F1DFC2 | Warm accent |
-| ink-900 | #292421 | Main text |
 | ink-600 | #786F69 | Secondary text |
 | border-warm | #EDE4DA | Borders/dividers |
 | success | #397A5B | Success state |
 | danger | #C93650 | Error state |
+
+**Design decision (2026-11-17):** the product brief refines the original starting tokens. The requested six palette values are now the source of truth. Semantic aliases such as `vanilla-50`, `strawberry-500`, `strawberry-800`, `strawberry-100`, and `ink-900` keep existing component class names stable while pointing at the new palette. Warm surface, vanilla accent, muted text, border, success, and error tokens remain unchanged.
 
 Implement tokens centrally using CSS variables and Tailwind theme integration. Do not scatter raw color values across components.
 

@@ -40,6 +40,14 @@ function buildKey(input: AddToCartInput): string {
   ].join(":");
 }
 
+function resolveDefaultVariant(product: Product, requested: ProductVariant | null): ProductVariant | null {
+  const active = product.variants.filter((variant) => variant.is_active);
+  if (requested && active.some((variant) => variant.id === requested.id)) {
+    return requested;
+  }
+  return active.find((variant) => variant.is_default) ?? active[0] ?? null;
+}
+
 function readCart(): CartLine[] {
   if (typeof window === "undefined") return [];
   try {
@@ -78,7 +86,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback((input: AddToCartInput) => {
     const quantity = Math.min(99, Math.max(1, Math.round(input.quantity)));
-    const key = buildKey(input);
+    const variant = resolveDefaultVariant(input.product, input.variant);
+    const key = buildKey({ ...input, variant });
 
     setLines((current) => {
       const existing = current.find((line) => line.key === key);
@@ -96,10 +105,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         slug: input.product.slug,
         name: input.product.name,
         imageUrl: input.product.image_url,
-        variantId: input.variant?.id ?? null,
-        variantName: input.variant?.name ?? null,
+        variantId: variant?.id ?? null,
+        variantName: variant?.name ?? null,
         basePriceCents: input.product.price_cents,
-        variantDeltaCents: input.variant?.price_delta_cents ?? 0,
+        variantDeltaCents: variant?.price_delta_cents ?? 0,
         addOns: input.addOns.map((addOn) => ({
           id: addOn.id,
           name: addOn.name,

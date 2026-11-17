@@ -1,197 +1,170 @@
 # Phased Development Plan — Vanilla & Strawberry
 
-> Audited 2026-11-14. The repository contained documentation only; this plan replaces the placeholder phases with an executable implementation plan. See `PROJECT_AUDIT.md`.
+**Revised:** 2026-11-17. This plan supersedes the earlier "documentation-only" version. See `PROJECT_AUDIT.md` for current evidence.
 
 ## Delivery principles
 
 - One repository; Laravel in `api/`, Next.js at root.
-- Vertical slices: each phase ships working API + UI + tests, not screenshots.
+- Vertical slices: API + UI + verification, not screenshots.
 - Backend is authoritative for prices, discounts, totals, roles, table state, and status transitions.
-- Money stored as integer cents; all API responses use `{ "data": ..., "message": ... }`.
+- Money is integer cents; API responses use `{ "data": ..., "message": ... }`.
 - Exactly three roles: `customer`, `chef`, `admin`.
-- No feature is marked complete without a test or browser verification.
+- No feature is called complete without a test or browser verification.
 - MySQL is the target database; SQLite in-memory is used for automated tests.
+- Preserve existing uncommitted work; never reset or overwrite it.
 
 ---
 
 ## Phase 0 — Audit and baseline (complete)
 
-- [x] Read `AGENTS.md` and all `docs/` files.
-- [x] Inspect repository tree; confirm no app code, git history, manifests, or assets.
-- [x] Verify Node, npm, PHP, Composer, MySQL, and network.
-- [x] Record findings in `docs/PROJECT_AUDIT.md`.
-- [x] Record environment decisions: MySQL on port `3307` for local dev, SQLite for tests.
+- [x] Read `AGENTS.md` and relevant docs.
+- [x] Inspect repository tree, manifests, git state, assets, and scripts.
+- [x] Confirm Node, npm, PHP, Composer, MySQL, and browser tooling.
+- [x] Revise `PROJECT_AUDIT.md` and this plan to match actual code.
 
-**Acceptance:** audit exists and no application files were modified.
-
----
-
-## Phase 1 — Foundation
-
-### 1.1 Laravel API scaffold
-- Create Laravel application in `api/` with Composer.
-- Install Sanctum; configure token auth.
-- Configure `/api/v1` route prefix, JSON errors, CORS for `localhost:3000`, rate limiters.
-- Add `HealthController` with database check.
-- Set `APP_URL`, `FRONTEND_URL`, DB, and token settings in `.env.example`.
-
-### 1.2 Frontend scaffold
-- Create Next.js App Router project at root with TypeScript, Tailwind CSS 4, ESLint.
-- Configure `next.config.ts`, path aliases, typed environment access.
-- Add shared fonts, design tokens, base layout, metadata.
-- Download licensed dessert photography into `public/images`.
-
-### 1.3 Root tooling
-- Root `package.json` scripts: `setup`, `dev`, `build`, `start`, `test`, `lint`, `health`, `db:up`, `db:down`.
-- Cross-platform Node scripts in `scripts/` using `child_process`, with prerequisite and port checks, labelled output, and clean SIGINT shutdown.
-- Local MySQL bootstrap script: initialize `.mysql-data`, run on `127.0.0.1:3307`, create `vanilla_strawberry` database, never touch unknown databases.
-- `.env.example` at root and `api/.env.example`; `.gitignore` for env, dependencies, builds, and local MySQL data.
-
-**Acceptance:** `npm run setup`, `npm run dev`, `npm run health` work from root; API `/api/v1/health` returns OK.
+**Acceptance:** audit and plan now describe the real repository.
 
 ---
 
-## Phase 2 — Database and authentication
+## Phase 1 — Foundation (complete)
 
-### 2.1 Schema (additive, reversible migrations)
-Tables: `users`, `categories`, `products`, `product_variants`, `add_ons`, `product_add_on`, `orders`, `order_items`, `order_item_add_ons`, `tables`, `table_sessions`, `reservations`, `coupons`, `coupon_redemptions`, `notifications`, `addresses`, `gallery_items`, `settings`.
+- [x] Laravel application in `api/` with Sanctum, `/api/v1` routes, JSON errors, CORS, rate limiting, health check.
+- [x] Next.js App Router at root with TypeScript, Tailwind 4, ESLint, path aliases, fonts, metadata.
+- [x] Local dessert imagery in `public/images/`.
+- [x] Root scripts: `setup`, `dev`, `build`, `start`, `test`, `lint`, `health`, `db:up`, `db:down`, `db:status`.
+- [x] `.env.example` at root and in `api/`.
 
-Key constraints:
-- `users.role` enum `customer|chef|admin`; unique email.
-- Money columns integer unsigned; quantities positive.
-- Order item snapshots of product name, variant, unit price, add-ons.
-- `tables.token` unique random; `table_sessions.token` unique, status open/closed.
-- `orders.order_number` unique; source `online|qr`; fulfillment `delivery|pickup|dine_in`; status enum.
-- Reservation slot lookup index on `(reservation_date, reservation_time)`.
-- Coupon code unique, usage counter, validity window.
-- `settings` key/value JSON for feature flags and fees.
-
-### 2.2 Seed data
-- Admin, chef, and customer demo accounts.
-- 5 categories, 14 products with variants/add-ons, 8 tables with secure tokens.
-- Gallery items, sample reservations/coupons, feature settings.
-- Idempotent seeders; no destructive operations in setup.
-
-### 2.3 Authentication and authorization
-- Register customer, login (all roles), logout, me, update profile.
-- Sanctum bearer tokens; rate-limited auth endpoints.
-- Role middleware; policies for orders, reservations, addresses, admin resources.
-- Backend returns 401/403 correctly; frontend role guards are UX only.
-
-**Acceptance:** feature tests for registration, login, role rejection, protected routes, password handling.
+**Acceptance:** all root scripts exist; build and lint pass.
 
 ---
 
-## Phase 3 — Catalog and public API
+## Phase 2 — Database and authentication (complete)
 
-- Categories and products endpoints with pagination, search, category filter, collection filters (`new`, `best`, `budget`, `premium`), and sorting.
-- Product detail with variants, add-ons, images, badges, category.
-- Gallery and public settings endpoints (feature flags, restaurant info, tax/fees).
-- Table validation endpoint by QR token.
-- Admin catalog CRUD with image URL validation and slug generation.
-- API resources keep response shapes consistent.
+- [x] Full migration set for users, catalog, orders, tables/sessions, reservations, coupons, notifications, addresses, gallery, settings.
+- [x] Idempotent seed data for demo accounts, products, variants, add-ons, tables, settings.
+- [x] Sanctum registration/login/logout/me/profile with rate limiting.
+- [x] Role middleware and backend authorization for customer/chef/admin boundaries.
+- [x] Backend feature tests cover auth and role rejection.
 
-**Acceptance:** tests for search/filter/pagination, inactive product exclusion, admin-only writes, table token validation.
-
----
-
-## Phase 4 — Design system and public site
-
-- Tokens: vanilla background, warm surface, strawberry primary/deep/soft, ink, border, success/error; Tailwind `@theme` integration.
-- Typography: Fraunces (display) + Manrope (body), restrained scale.
-- Components: button, input, select, textarea, badge, card, dialog, alert, empty state, product tile, quantity stepper, navbar, footer, section heading.
-- Homepage sections in required order: landing, progressive hero, about, location, book-like photo catalog, new arrivals, best sellers, cheapest, premium, search/discovery, login/register entry, footer.
-- Menu page with search, category and collection filters, responsive grid.
-- Product detail with variant/add-on selection and add to cart.
-- About/location content and reservation entry point.
-- Accessibility: semantic headings, visible focus, reduced motion, alt text, mobile navigation.
-
-**Acceptance:** responsive browser review at 390px, 768px, 1280px; no horizontal overflow; keyboard navigation works.
+**Acceptance:** 41 backend tests pass.
 
 ---
 
-## Phase 5 — Commerce
+## Phase 3 — Catalog and public API (complete)
 
-- Cart context persisted to localStorage; add/remove/update; variant and add-on identity.
-- Checkout page: delivery/pickup, customer details, address, notes, coupon, payment-on-collection notice.
-- `POST /orders` validates product/variant/add-on availability; recalculates each line, tax, fees, discount, total; stores snapshots in a transaction.
-- Guest checkout allowed; authenticated orders linked to user.
-- Order confirmation page with order number; guest access token.
-- Account: order history and detail, profile, addresses.
-- Coupon validation endpoint and server-side redemption limits.
-- State transitions validated; clients cannot set totals or statuses.
+- [x] Categories/products endpoints with pagination, search, filters, collections, sorting.
+- [x] Product detail with variants, add-ons, badges, category.
+- [x] Public gallery and settings endpoints.
+- [x] Table validation by QR token.
+- [x] Admin catalog CRUD.
 
-**Acceptance:** tests prove client-supplied totals are ignored, invalid coupons rejected, order snapshots survive catalog edits, order ownership enforced.
+**Acceptance:** catalog pages and tests work against the API.
 
 ---
 
-## Phase 6 — QR and Chef workflow
+## Phase 4 — Design system and public site (mostly complete)
 
-- `/qr/[token]` validates table; page load does not occupy the table.
-- Explicit "Start table order" creates an open table session; orders carry `source=qr`, table and session IDs; `dine_in` enforced.
-- Chef dashboard lists active and recent orders with items, quantities, variants, add-ons, notes, table, source, and elapsed time.
-- Chef status updates only through permitted transitions: `pending → confirmed → preparing → ready → completed`; cancellation is admin-only.
-- Polling every 15 seconds reconciles API state; manual refresh available.
-- Notifications created for new orders and status changes.
+- [x] Editorial homepage with required section order.
+- [x] Menu, product detail, story, gallery, reservations entry points.
+- [x] Shared UI components: button, badge, field, modal, empty state, spinner, product card/grid.
+- [x] Responsive header/footer, mobile navigation, reduced-motion-friendly CSS.
+- [x] Aligned all tokens with the requested palette (`#FFF8EF`, `#E94B68`, `#982D49`, `#F8DDE2`, `#392725`, `#FFFFFF`).
+- [ ] **Remaining:** add product quick view and a fuller image gallery on detail pages.
 
-**Acceptance:** tests for session creation, QR order attribution, invalid token, chef role enforcement, illegal transitions, table release by admin.
-
----
-
-## Phase 7 — Admin operations
-
-- Dashboard: revenue, order counts, active orders, customers, average order value, top products, recent orders.
-- Products: create/edit/archive, variants and add-ons, collection flags, imagery.
-- Categories: create/edit/deactivate.
-- Orders: filter, inspect, update status, cancel with reason.
-- Customers: list/search, detail, order count.
-- Chefs: create, edit, activate/deactivate, reset password.
-- Tables: create/edit, activate, regenerate QR token, view QR link, close session.
-- Reservations: list and update status, feature toggle.
-- Coupons: CRUD, usage stats, feature toggle.
-- Gallery/content: CRUD, ordering, visibility.
-- Settings: restaurant details, fees, tax, reservation/coupon flags.
-- All admin pages are functional against the API, not decorative.
-
-**Acceptance:** tests for admin authorization, CRUD validation, feature toggles, status updates; browser verification of each page.
+**Acceptance:** desktop and 390 px browser checks pass; palette values verified in the browser.
 
 ---
 
-## Phase 8 — Optional features and notifications
+## Phase 5 — Commerce (complete, with recent fix)
 
-- Reservations: create (public), list (account/admin), transactional slot capacity, status updates, feature flag rejection.
-- Coupons: validate/apply at checkout, redemption records, usage and date limits, feature flag rejection.
-- Notifications: persisted records, customer/chef/admin endpoints, unread counts, mark read.
-- Real-time: broadcast events for new orders and status changes, private channel authorization, polling fallback. No public broadcast of sensitive data.
-- GPS: request only at checkout when delivery is chosen; store coordinates; no live courier tracking claim.
+- [x] Persisted cart context with variant/add-on identity.
+- [x] Cart page and new `CartDrawer` used from the header.
+- [x] Checkout with delivery/pickup, coupon validation, pay-on-collection notice.
+- [x] Server-side recalculation of lines, fees, tax, discounts, totals and order snapshots.
+- [x] Guest order token, order confirmation, account order history/detail.
+- [x] Recent fix: quick-add now resolves the product's default active variant before computing the cart key and line price.
+- [x] Recent fix: submitting state is reset on successful checkout.
 
-**Acceptance:** tests for disabled-feature rejection, double-booking prevention, coupon limits, notification authorization, channel authorization.
+**Acceptance:** browser smoke verified drawer, default variant, quantity, remove, and mobile layout; no console/page errors.
 
 ---
 
-## Phase 9 — Verification and handover
+## Phase 6 — QR and Chef workflow (complete)
 
-- Backend: `php artisan test` (feature coverage for all critical journeys).
-- Frontend: `npm run lint`, `npx tsc --noEmit`, `npm run build`.
-- Browser: customer browse → detail → cart → coupon → checkout → order; QR → session → order → Chef → status; admin catalog/settings; auth flows; mobile layouts; reduced motion.
-- Accessibility: keyboard forms/dialogs, labels, contrast, focus.
-- Performance: image dimensions, `next/image`, loading/empty/error states.
-- Docs: update `API.md`, `DATABASE.md`, `DEVELOPMENT.md`, `TESTING.md`, `DEPLOYMENT.md`, `CHANGELOG.md`.
-- Deployment: Dockerfiles, compose for MySQL/API/frontend, environment checklist.
+- [x] `/qr/[token]` validates the table without occupying it.
+- [x] Explicit table session creation; orders carry source/table/session.
+- [x] Chef board with item details, notes, source, table, and elapsed time.
+- [x] Permitted status transitions only; polling reconciliation and manual refresh.
 
-**Acceptance:** commands produce evidence; any blocker is documented honestly.
+**Acceptance:** backend tests cover QR attribution, role enforcement, and illegal transitions.
+
+---
+
+## Phase 7 — Admin operations (implemented, depth to review)
+
+- [x] Dashboard, products, categories, add-ons, orders, customers, chefs, tables, coupons, reservations, gallery, settings.
+- [x] Functional API-backed CRUD and status updates.
+- [ ] **Remaining:** deepen dashboard analytics and visual hierarchy without adding fake data.
+
+**Acceptance:** admin pages exist and are API-backed; analytics polish remains.
+
+---
+
+## Phase 8 — Optional features and notifications (complete)
+
+- [x] Reservations and coupons with server-enforced flags.
+- [x] Transactional double-booking prevention and coupon limits.
+- [x] Persisted notifications with unread UI.
+- [x] Broadcast-ready events and polling fallback; no public sensitive broadcasts.
+- [x] Location permission is only requested when needed; no live courier-tracking claim.
+
+**Acceptance:** tests cover disabled flags, limits, and authorization.
+
+---
+
+## Phase 9 — Verification and handover (in progress)
+
+- [x] `php artisan test --compact` — 41 tests, 208 assertions.
+- [x] `npm run lint`, `npm run typecheck`, `npm run build`.
+- [x] Browser smoke for cart drawer, default variant, quantity, remove, and 390 px layout.
+- [ ] Expand browser journeys: auth, QR → Chef → status, checkout with coupon, admin CRUD.
+- [ ] Keyboard/accessibility pass across dialogs and forms.
+- [ ] Add Docker/compose deployment configuration.
+- [ ] Refresh `README.md`, `DEVELOPMENT.md`, `TESTING.md`, `DEPLOYMENT.md`, `API.md`, `DATABASE.md` where they still describe an unimplemented project.
+
+**Acceptance:** evidence is recorded; remaining gaps are explicit, not hidden.
+
+---
+
+## Phase 10 — Current polish batch (2026-11-17)
+
+**Completed in this batch:**
+- Added `src/components/cart/cart-drawer.tsx`.
+- Wired header cart button to the drawer through `SiteFrame`.
+- Fixed default-variant resolution in `CartProvider`.
+- Reset checkout `submitting` state after a successful order.
+- Revised stale audit/plan/changelog docs.
+- Verified with lint, typecheck, build, backend tests, and a live Chromium smoke test.
+- Applied the requested six-colour palette to design tokens, viewport theme colour, and documented semantic aliases.
+
+**Next safe steps:**
+1. Add product quick view and richer product imagery.
+2. Deepen admin dashboard analytics using existing API data only.
+3. Add durable browser E2E coverage for the critical journeys below.
 
 ---
 
 ## Critical journeys (must pass)
 
-1. Customer registration/login and role-aware navigation.
-2. Browse/filter/search catalog and open a product.
-3. Customize product, add to cart, cart survives refresh.
-4. Checkout recalculates totals server-side; confirmation displays order.
-5. Coupon applied and validated; invalid/disabled coupon rejected.
-6. QR scan validates table; explicit session start; order tagged with table.
-7. Chef sees new order and advances status; customer sees update.
-8. Admin creates a product; it appears publicly.
-9. Reservations disabled → UI hidden and API rejects.
-10. Unauthorized customer cannot access Chef/Admin APIs; chef cannot cancel; client totals ignored.
+| # | Journey | Status |
+|---|---|---|
+| 1 | Registration/login and role-aware navigation | Implemented; browser expansion pending. |
+| 2 | Browse/filter/search catalog and open a product | Implemented. |
+| 3 | Customize product, add to cart, cart survives refresh | Implemented; browser smoke passed. |
+| 4 | Checkout recalculates totals server-side; confirmation displays order | Implemented; end-to-end browser run pending. |
+| 5 | Coupon applied and validated; invalid/disabled coupon rejected | Implemented; backend tests pass. |
+| 6 | QR validates table; explicit session start; order tagged with table | Implemented; browser expansion pending. |
+| 7 | Chef sees new order and advances status | Implemented; browser expansion pending. |
+| 8 | Admin creates a product; it appears publicly | Implemented; browser expansion pending. |
+| 9 | Reservations disabled → UI hidden and API rejects | Implemented. |
+| 10 | Unauthorized customer cannot access Chef/Admin APIs; chef cannot cancel; client totals ignored | Implemented; backend tests pass. |

@@ -29,7 +29,7 @@ const links = [
   { href: "/gallery", label: "Gallery" },
 ];
 
-export function SiteHeader() {
+export function SiteHeader({ onCartOpen }: { onCartOpen?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, ready, logout } = useAuth();
@@ -90,8 +90,9 @@ export function SiteHeader() {
         <div className="flex items-center gap-1.5 sm:gap-2.5">
           {ready && user ? <NotificationBell /> : null}
 
-          <Link
-            href="/cart"
+          <button
+            type="button"
+            onClick={() => onCartOpen?.()}
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-ink-700 transition hover:bg-vanilla-100 hover:text-ink-900"
             aria-label={`Cart${itemCount > 0 ? `, ${itemCount} items` : ""}`}
           >
@@ -101,7 +102,7 @@ export function SiteHeader() {
                 {itemCount > 99 ? "99+" : itemCount}
               </span>
             ) : null}
-          </Link>
+          </button>
 
           {ready && user ? (
             <div ref={accountRef} className="relative hidden sm:block">

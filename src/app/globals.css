@@ -1,16 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-vanilla-50: #fff9f0;
+  --color-vanilla-cream: #fff8ef;
+  --color-strawberry: #e94b68;
+  --color-deep-berry: #982d49;
+  --color-soft-pink: #f8dde2;
+  --color-chocolate: #392725;
+  --color-white: #ffffff;
+
+  --color-vanilla-50: #fff8ef;
   --color-vanilla-0: #fffdf9;
   --color-vanilla-100: #fbf1e4;
   --color-vanilla-200: #f1dfc2;
   --color-strawberry-50: #fdeef1;
-  --color-strawberry-100: #f9dce1;
-  --color-strawberry-500: #e94b62;
+  --color-strawberry-100: #f8dde2;
+  --color-strawberry-500: #e94b68;
   --color-strawberry-600: #d93f57;
   --color-strawberry-700: #c93650;
-  --color-ink-900: #292421;
+  --color-strawberry-800: #982d49;
+  --color-ink-900: #392725;
   --color-ink-700: #4a423d;
   --color-ink-600: #786f69;
   --color-border-warm: #ede4da;
@@ -120,7 +128,7 @@
     line-height: var(--text-label--line-height);
     font-weight: 700;
     text-transform: uppercase;
-    color: var(--color-strawberry-700);
+    color: var(--color-strawberry-800);
   }
 
   .rule {
@@ -143,7 +151,7 @@
   .paper-grain {
     background-image:
       radial-gradient(circle at 20% 15%, rgb(241 223 194 / 0.32), transparent 42%),
-      radial-gradient(circle at 85% 0%, rgb(249 220 225 / 0.45), transparent 38%);
+      radial-gradient(circle at 85% 0%, rgb(248 221 226 / 0.45), transparent 38%);
   }
 }
 

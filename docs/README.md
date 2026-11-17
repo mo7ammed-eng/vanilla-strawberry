@@ -10,6 +10,8 @@ Start here:
 7. `API.md` — API conventions.
 8. `TESTING.md` — quality gates.
 9. `DEPLOYMENT.md` — hosting and deployment.
-10. `DEVELOPMENT_PLAN.md` — phased implementation plan.
+10. `PROJECT_AUDIT.md` — current repository audit and verification evidence.
+11. `DEVELOPMENT_PLAN.md` — revised phased implementation plan.
+12. `CHANGELOG.md` — meaningful changes.
 
 AI agents must read `../AGENTS.md` first. Do not assume this documentation overrides actual project code where it describes an existing implementation; audit and reconcile differences.
